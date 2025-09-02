@@ -18,6 +18,9 @@ return new class extends Migration
 
             $table->index('source');
             $table->index('utm_source');
+            $table->index('created_at');
+            $table->index('referrer_host');
+
         });
     }
 

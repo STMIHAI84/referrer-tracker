@@ -1,4 +1,4 @@
-.env
+.env.prod
 vendor
 node_modules
 storage/logs

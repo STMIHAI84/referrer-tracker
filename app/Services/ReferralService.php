@@ -3,131 +3,91 @@
 namespace App\Services;
 
 use App\Models\Referral;
+use App\Support\SourceDetector;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class ReferralService
 {
+    /** Schimbă în true dacă vrei să salvezi și boții */
+    private const STORE_BOTS = true;
+
+    /** Surse permise (normalizate) */
+    private const ALLOWED_SOURCES = [
+        'facebook','instagram','twitter','linkedin','whatsapp','telegram','google',
+        'facebook-app','direct','other',
+        // boți (dacă STORE_BOTS = true)
+        'bot:facebook','bot:telegram','bot:google','bot:bing','bot:twitter','bot:linkedin','bot:slack','bot:discord','bot:other',
+    ];
+
     public function trackReferral(Request $request): ?Referral
     {
-        $source = $this->determineSource($request);
+        // 1) Determină sursa
+        $det = SourceDetector::detect($request); // source, referer_raw, user_agent, host_referrer
+        $source = strtolower($det['source'] ?? 'direct');
 
-        // Verifică dacă trebuie să track-uiască (exclude sursele interne)
-        if (!$this->shouldTrackSource($source, $request)) {
+        // 2) Exclude trafic intern (același host ca APP_URL)
+        if ($this->isInternalTraffic($det['host_referrer'])) {
             return null;
         }
 
-        // Creează înregistrarea
+        // 3) Optional: nu salva boții
+        if (!$this->shouldStoreBasedOnBot($source)) {
+            return null;
+        }
+
+        // 4) Optional: dacă permiți UTM/ref param ca OVERRIDE (doar dacă există)
+        $utmSource = $request->input('utm_source');
+        $refParam  = $request->input('ref');
+        $srcParam  = $request->input('source');
+        if ($utmSource)       $source = strtolower($utmSource);
+        elseif ($refParam)    $source = strtolower($refParam);
+        elseif ($srcParam)    $source = strtolower($srcParam);
+
+        // 5) Surse permise
+        if (!in_array($source, self::ALLOWED_SOURCES, true)) {
+            $source = 'other';
+        }
+
+        // 6) Creează înregistrarea
         return Referral::create([
-            'referrer_url' => $this->getReferrerUrl($request),
-            'referrer_host' => $this->getReferrerUrl($request) ? parse_url($this->getReferrerUrl($request), PHP_URL_HOST) : null,
-            'source' => $source,
-            'utm_source' => $request->input('utm_source'),
-            'utm_medium' => $request->input('utm_medium'),
-            'utm_campaign' => $request->input('utm_campaign'),
-            'referral_code' => $request->input('ref'),
-            'landing_path' => $request->path(),
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'full_url' => $request->fullUrl(),
+            'referrer_url'   => $det['referer_raw'] ?? null,
+            'referrer_host'  => $det['host_referrer'] ?? null,
+            'source'         => $source,
+            'utm_source'     => $utmSource,
+            'utm_medium'     => $request->input('utm_medium'),
+            'utm_campaign'   => $request->input('utm_campaign'),
+            'referral_code'  => $request->input('ref'),
+            'landing_path'   => '/'.$request->path(),
+            'ip'             => $request->ip(),
+            'user_agent'     => $det['user_agent'] ?? $request->userAgent(),
+            'full_url'       => $request->fullUrl(),
         ]);
     }
 
-    protected function determineSource(Request $request): string
+    private function shouldStoreBasedOnBot(string $source): bool
     {
-        // Prioritizează parametrii URL peste HTTP Referer
-        if ($utmSource = $request->input('utm_source')) {
-            return strtolower($utmSource);
-        }
-
-        if ($ref = $request->input('ref')) {
-            return strtolower($ref);
-        }
-
-        if ($source = $request->input('source')) {
-            return strtolower($source);
-        }
-
-        // Fallback la HTTP Referer (dacă este disponibil)
-        $referrerUrl = $this->getReferrerUrl($request);
-        if ($referrerUrl) {
-            return $this->parseSourceFromUrl($referrerUrl);
-        }
-
-        return 'direct';
+        $isBot = str_starts_with($source, 'bot:');
+        return $isBot ? self::STORE_BOTS : true;
     }
 
-    protected function parseSourceFromUrl(string $url): string
+    private function isInternalTraffic(?string $refHost): bool
     {
-        $host = parse_url($url, PHP_URL_HOST);
-
-        $domainSources = [
-            'facebook.com' => 'facebook',
-            'instagram.com' => 'instagram',
-            'twitter.com' => 'twitter',
-            'linkedin.com' => 'linkedin',
-            'whatsapp.com' => 'whatsapp',
-            'google.com' => 'google',
-        ];
-
-        foreach ($domainSources as $domain => $source) {
-            if (str_contains($host, $domain)) {
-                return $source;
-            }
-        }
-
-        return 'other';
-    }
-
-    protected function shouldTrackSource(string $source, Request $request): bool
-    {
-        // Verifică dacă este trafic intern (același domeniu)
-        if ($this->isInternalTraffic($request)) {
-            return false;
-        }
-
-        // Listă de surse permise
-        $allowedSources = ['facebook', 'instagram', 'whatsapp', 'twitter', 'linkedin', 'google', 'organic', 'direct', 'other'];
-
-        return in_array($source, $allowedSources);
-    }
-
-    protected function isInternalTraffic(Request $request): bool
-    {
-        $referrerUrl = $this->getReferrerUrl($request);
-        if (!$referrerUrl) {
-            return false;
-        }
-
-        $referrerHost = parse_url($referrerUrl, PHP_URL_HOST);
+        if (!$refHost) return false;
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
-
-        $localHosts = ['localhost', '127.0.0.1', '::1'];
-
-        if (in_array($referrerHost, $localHosts) && in_array($appHost, $localHosts)) {
-            return true;
-        }
-
-        return $referrerHost === $appHost;
-    }
-
-    protected function getReferrerUrl(Request $request): ?string
-    {
-        return $request->headers->get('referer');
+        $appHost = $appHost ? preg_replace('/^www\./', '', $appHost) : null;
+        $refHost = preg_replace('/^www\./', '', $refHost);
+        return $appHost && $refHost && ($appHost === $refHost);
     }
 
     public function getTrackingMessage(?Referral $referral): string
     {
-        if ($referral) {
-            return "Sursa înregistrată: {$referral->source}";
-        }
-
-        return "Nu am primit sursă externă (trafic direct, intern sau blocat).";
+        return $referral
+            ? "Sursa înregistrată: {$referral->source}"
+            : "Nu am primit sursă externă (trafic direct, intern sau blocat).";
     }
 
-    // Funcție utilitară pentru generat link-uri
     public function generateTrackingLink(string $baseUrl, array $params): string
     {
-        return $baseUrl . '?' . http_build_query($params);
+        return $baseUrl.(str_contains($baseUrl,'?') ? '&' : '?').http_build_query($params);
     }
 }

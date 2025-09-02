@@ -5,58 +5,96 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Referral;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class ReferralController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Referral::query();
+        $validated = $request->validate([
+            'source'     => ['nullable','string','max:100'],
+            'utm_source' => ['nullable','string','max:100'],
+            'q'          => ['nullable','string','max:200'],
+            'from'       => ['nullable','date'],
+            'to'         => ['nullable','date'],
+            'exclude_bots' => ['nullable','boolean'],
+        ]);
 
-        // Filtrare după sursă
-        if ($request->has('source')) {
-            $query->where('source', $request->source);
-        }
+        $query = Referral::query()
+            ->when($validated['source'] ?? null, fn($q,$v) => $q->fromSource($v))
+            ->when($validated['utm_source'] ?? null, fn($q,$v) => $q->withUtm($v))
+            ->excludeBots((bool)($validated['exclude_bots'] ?? false))
+            ->between($validated['from'] ?? null, $validated['to'] ?? null)
+            ->search($validated['q'] ?? null)
+            ->latest();
 
-        // Filtrare după UTM source
-        if ($request->has('utm_source')) {
-            $query->where('utm_source', $request->utm_source);
-        }
+        // Paginare (mai bine decât limit fix)
+        $items = $query->paginate(50)->withQueryString();
 
-        $items = $query->latest()->limit(200)->get();
+        // Statistici (agregări în DB, nu pe collection)
+        $sources = Referral::select('source')->distinct()->orderBy('source')->pluck('source');
+        $utmSources = Referral::select('utm_source')->whereNotNull('utm_source')->distinct()->orderBy('utm_source')->pluck('utm_source');
 
-        // Statistici pentru filtre
-        $sources = Referral::select('source')->distinct()->pluck('source');
-        $utmSources = Referral::select('utm_source')->distinct()->pluck('utm_source');
+        $totalsBySource = Referral::selectRaw('source, COUNT(*) as c')
+            ->groupBy('source')->orderByDesc('c')->pluck('c','source');
 
-        return view('admin.referrers', compact('items', 'sources', 'utmSources'));
+        return view('admin.referrers', compact('items','sources','utmSources','totalsBySource'));
     }
 
-    public function export()
+    public function export(Request $request): StreamedResponse
     {
-        $referrals = Referral::all();
+        // Folosește aceleași filtre ca în index
+        $validated = $request->validate([
+            'source'     => ['nullable','string','max:100'],
+            'utm_source' => ['nullable','string','max:100'],
+            'q'          => ['nullable','string','max:200'],
+            'from'       => ['nullable','date'],
+            'to'         => ['nullable','date'],
+            'exclude_bots' => ['nullable','boolean'],
+        ]);
 
-        return response()->streamDownload(function () use ($referrals) {
-            $handle = fopen('php://output', 'w');
+        $query = Referral::query()
+            ->when($validated['source'] ?? null, fn($q,$v) => $q->fromSource($v))
+            ->when($validated['utm_source'] ?? null, fn($q,$v) => $q->withUtm($v))
+            ->excludeBots((bool)($validated['exclude_bots'] ?? false))
+            ->between($validated['from'] ?? null, $validated['to'] ?? null)
+            ->search($validated['q'] ?? null)
+            ->latest();
+
+        $filename = 'referrals-'.now()->format('Y-m-d_H-i').'.csv';
+
+        return response()->streamDownload(function () use ($query) {
+            $out = fopen('php://output', 'w');
+
+            // BOM pentru Excel
+            fwrite($out, "\xEF\xBB\xBF");
 
             // Header
-            fputcsv($handle, ['ID', 'Data', 'Sursa', 'UTM Source', 'UTM Medium', 'UTM Campaign', 'Host', 'IP', 'User Agent']);
+            fputcsv($out, ['ID','Data','Sursa','UTM Source','UTM Medium','UTM Campaign','Host','Landing','IP','User Agent']);
 
-            // Date
-            foreach ($referrals as $referral) {
-                fputcsv($handle, [
-                    $referral->id,
-                    $referral->created_at,
-                    $referral->source,
-                    $referral->utm_source,
-                    $referral->utm_medium,
-                    $referral->utm_campaign,
-                    $referral->referrer_host,
-                    $referral->ip,
-                    $referral->user_agent
-                ]);
-            }
+            // Stream pe loturi, fără să încărcăm tot în memorie
+            $query->chunkById(1000, function ($chunk) use ($out) {
+                foreach ($chunk as $r) {
+                    fputcsv($out, [
+                        $r->id,
+                        $r->created_at?->format('Y-m-d H:i:s'),
+                        $r->source,
+                        $r->utm_source,
+                        $r->utm_medium,
+                        $r->utm_campaign,
+                        $r->referrer_host,
+                        $r->landing_path,
+                        $r->ip,
+                        $r->user_agent,
+                    ]);
+                }
+                // forțează flush
+                fflush($out);
+            });
 
-            fclose($handle);
-        }, 'referrals-' . date('Y-m-d') . '.csv');
+            fclose($out);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+        ]);
     }
 }

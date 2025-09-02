@@ -1,30 +1,19 @@
 <?php
 
+use App\Http\Controllers\Admin\ReferralController;
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 
 Route::get('/', function () {
     return response('OK', 200);
 });
-Route::get('/source', function () {
-    return <<<HTML
-<!doctype html>
-<html lang="ro"><meta charset="utf-8">
-<body style="font-family: system-ui; padding:2rem">
-  <h1>Pagina sursă (HTTP ➜ HTTP)</h1>
-  <p>Dă click mai jos ca să trimiți Referer către /landing.</p>
-  <p><a href="/landing">Mergi la landing</a></p>
-  <p><a href="/landing?utm_source=facebook">Landing cu UTM (Facebook)</a></p>
-  <p><a href="/landing?ref=instagram">Landing cu ref (Instagram)</a></p>
-</body></html>
-HTML;
-});
 
 Route::get('/landing', [LandingController::class, 'show'])->name('landing');
 
-Route::get('/admin/referrers', [AdminReferralController::class, 'index'])
-    ->name('admin.referrers')
-    ->middleware('throttle:20,1');
+Route::prefix('admin')->group(function () {
+    Route::get('/referrers', [ReferralController::class, 'index'])->name('admin.referrers');
+    Route::get('/referrers/export', [ReferralController::class, 'export'])->name('admin.referrers.export');
+});
 
 // Rute pentru generat link-uri de test
 Route::get('/generate-links', function () {
