@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: referrer-tracker
+    env: docker # NU schimba; permite instalări/commenzi la build
+    plan: free
+    runtime: image
+    region: frankfurt
+    healthCheckPath: /landing
+    buildCommand: |
+      # 1) Instalează dependențele PHP (composer trebuie să fie în imagine)
+      composer install --no-dev --prefer-dist --optimize-autoloader
+
+      # 2) Optimizări Laravel
+      php artisan config:cache
+      php artisan route:cache
+      php artisan view:cache
+    startCommand: |
+      # Rulează serverul PHP în container (Render furnizează $PORT)
+      php -S 0.0.0.0:$PORT -t public
+    postDeployCommand: |
+      # Migrează DB după ce serviciul e pornit în mediu de rulare (are acces la DB)
+      php artisan migrate --force
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_URL
+        # setează ulterior domeniul *.onrender.com după primul deploy sau propriul tău domeniu
+        value: https://referrer-tracker.onrender.com
+      - key: LOG_LEVEL
+        value: info
+      - key: SESSION_DRIVER
+        value: file
+      - key: CACHE_DRIVER
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: DB_CONNECTION
+        value: pgsql
+      # APP_KEY trebuie setată separat în dashboard sau aici (NU pune în repo chei reale)
+      # - key: APP_KEY
+      #   value: base64:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+databases:
+  - name: referrer-db
+    plan: free
