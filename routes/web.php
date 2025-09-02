@@ -3,7 +3,9 @@
 use App\Http\Controllers\LandingController;
 use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 
-
+Route::get('/', function () {
+    return response('OK', 200);
+});
 Route::get('/source', function () {
     return <<<HTML
 <!doctype html>
