@@ -4,14 +4,14 @@ services:
     env: docker
     plan: free
     region: frankfurt
-    healthCheckPath: /landing
+    healthCheckPath: /
     envVars:
       - key: APP_ENV
         value: production
       - key: APP_DEBUG
         value: "false"
       - key: APP_URL
-        value: https://referrer-tracker.onrender.com   # actualizează după primul deploy cu URL-ul real
+        value: https://referrer-tracker.onrender.com
       - key: LOG_LEVEL
         value: info
       - key: SESSION_DRIVER
@@ -22,7 +22,30 @@ services:
         value: sync
       - key: DB_CONNECTION
         value: pgsql
-      # APP_KEY se setează din Dashboard (NU în repo)
+      # ===== Mapare explicită din baza Render =====
+      - key: DB_HOST
+        fromDatabase:
+          name: referrer-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: referrer-db
+          property: port
+      - key: DB_DATABASE
+        fromDatabase:
+          name: referrer-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: referrer-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: referrer-db
+          property: password
+      - key: DB_SSLMODE
+        value: require
+      # ===== (APP_KEY se setează în dashboard, nu în YAML) =====
 
 databases:
   - name: referrer-db
