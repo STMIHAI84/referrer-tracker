@@ -16,6 +16,7 @@
 <body>
 <a href="{{ route('landing') }}">← Înapoi la Landing</a>
 <a href="{{ route('admin.referrers') }}" style="margin-left: 1rem;">📊 Admin</a>
+<a href="https://referrer-tracker.onrender.com/landing" target="_blank">Test referrer</a>
 
 <h1>Generator Link-uri de Tracking</h1>
 
