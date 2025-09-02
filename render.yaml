@@ -4,7 +4,8 @@ services:
     env: docker
     plan: free
     region: frankfurt
-    healthCheckPath: /
+    healthCheckPath: /landing
+
     envVars:
       - key: APP_ENV
         value: production
@@ -22,30 +23,12 @@ services:
         value: sync
       - key: DB_CONNECTION
         value: pgsql
-      # ===== Mapare explicită din baza Render =====
-      - key: DB_HOST
+      # <- cheia magică: URL complet cu SSL din baza Render
+      - key: DATABASE_URL
         fromDatabase:
           name: referrer-db
-          property: host
-      - key: DB_PORT
-        fromDatabase:
-          name: referrer-db
-          property: port
-      - key: DB_DATABASE
-        fromDatabase:
-          name: referrer-db
-          property: database
-      - key: DB_USERNAME
-        fromDatabase:
-          name: referrer-db
-          property: user
-      - key: DB_PASSWORD
-        fromDatabase:
-          name: referrer-db
-          property: password
-      - key: DB_SSLMODE
-        value: require
-      # ===== (APP_KEY se setează în dashboard, nu în YAML) =====
+          property: connectionStringStandardSsl
+      # APP_KEY îl setezi din Dashboard (nu în yaml)
 
 databases:
   - name: referrer-db
