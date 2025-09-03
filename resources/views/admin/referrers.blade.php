@@ -110,9 +110,9 @@
             </div>
         </div>
     @endif
-
+    {{ $items->links() }}
 @endsection
-{{ $items->links() }}
+
 <style>
     .badge {
         display: inline-block;

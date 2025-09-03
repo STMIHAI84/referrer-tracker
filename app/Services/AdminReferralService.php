@@ -18,8 +18,11 @@ class AdminReferralService
             ->when($f->utm_source, fn($q,$v) => $q->withUtm($v))
             ->excludeBots($f->exclude_bots)
             ->between($f->from, $f->to)
-            ->search($f->q)
-            ->latest();
+            ->search($f->q);
+
+              if ($withOrdering) {
+                  $query->latest();
+              }
     }
 
     /** Listare cu paginare */
