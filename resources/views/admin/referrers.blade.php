@@ -37,7 +37,21 @@
             <div class="stat-label">Trafic direct</div>
         </div>
     </div>
-
+    <div class="card">
+        <h3>Statistici surse</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            @php
+                $sourceCounts = $items->groupBy('source')->map->count()->sortDesc();
+            @endphp
+            @foreach($sourceCounts as $source => $count)
+                <div style="padding: 1rem; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <strong>{{ ucfirst($source) }}</strong>
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #4361ee;">{{ $count }}</div>
+                    <small>{{ round(($count / $items->count()) * 100, 1) }}%</small>
+                </div>
+            @endforeach
+        </div>
+    </div>
 
     @if($items->count() > 0)
         <div class="table-container">
@@ -110,7 +124,6 @@
             </div>
         </div>
     @endif
-    {{ $items->links() }}
 @endsection
 
 <style>
