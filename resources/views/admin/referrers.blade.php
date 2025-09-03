@@ -9,28 +9,35 @@
         <a href="{{ route('generate.links') }}" class="btn btn-secondary">🔗 Generator Link-uri</a>
         <a href="{{ route('test.page1') }}" class="btn btn-secondary">🧪 Test 1</a>
         <a href="{{ route('test.page2') }}" class="btn btn-secondary">🧪 Test 2</a>
+        <a href="{{ route('admin.referrers.export') }}" class="btn btn-secondary">📥 Exportă CSV</a>
+
     </div>
 @endsection
 
 @section('content')
-    <div class="stats">
+    <div class="stats-grid">
         <div class="stat-card">
+            <div class="stat-icon">📊</div>
             <div class="stat-number">{{ $items->count() }}</div>
             <div class="stat-label">Total înregistrări</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon">🌐</div>
             <div class="stat-number">{{ $items->unique('source')->count() }}</div>
             <div class="stat-label">Surse unice</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon">💻</div>
             <div class="stat-number">{{ $items->unique('ip')->count() }}</div>
             <div class="stat-label">IP-uri unice</div>
         </div>
         <div class="stat-card">
+            <div class="stat-icon">⚡</div>
             <div class="stat-number">{{ $items->where('source', 'direct')->count() }}</div>
             <div class="stat-label">Trafic direct</div>
         </div>
     </div>
+
 
     @if($items->count() > 0)
         <div class="table-container">
