@@ -8,11 +8,14 @@ use Illuminate\Http\Request;
 
 class ReferralService
 {
+    /** Schimbă în true dacă vrei să salvezi și boții */
     private const STORE_BOTS = true;
 
+    /** Surse permise (normalizate) */
     private const ALLOWED_SOURCES = [
         'facebook','instagram','twitter','linkedin','whatsapp','telegram','google',
         'facebook-app','direct','other',
+        // boți (dacă STORE_BOTS = true)
         'bot:facebook','bot:telegram','bot:google','bot:bing','bot:twitter','bot:linkedin','bot:slack','bot:discord','bot:other',
     ];
 
@@ -51,60 +54,6 @@ class ReferralService
         return 'other';
     }
 
-    public function trackReferral(Request $request): ?Referral
-    {
-
-        $det    = SourceDetector::detect($request);
-        $source = strtolower($det['source'] ?? 'direct');
-
-        // 1) Surse explicite din URL au prioritate
-        $utmSource = $request->input('utm_source');
-        $refParam  = $request->input('ref');
-        $srcParam  = $request->input('source');
-
-
-        if (!$utmSource) {
-            $utmSource = $this->guessSourceFromHost($det['host_referrer'] ?? null);
-        }
-
-        foreach ([$utmSource, $refParam, $srcParam] as $cand) {
-            if ($cand) { $source = $this->normalizeSource((string)$cand); break; }
-        }
-
-        $hasExplicitSource = (bool) ($utmSource || $refParam || $srcParam);
-
-        if (!$hasExplicitSource && $this->isInternalTraffic($det['host_referrer'] ?? null, $hasExplicitSource)) {
-            return null;
-        }
-
-        if (!$this->shouldStoreBasedOnBot($source)) {
-            return null;
-        }
-
-        if (!in_array($source, self::ALLOWED_SOURCES, true)) {
-            $source = 'other';
-        }
-
-        return Referral::create([
-            'referrer_url'   => $det['referer_raw'] ?? null,
-            'referrer_host'  => $det['host_referrer'] ?? null,
-            'source'         => $source,
-            'utm_source'     => $utmSource ?: null,
-            'utm_medium'     => $request->input('utm_medium'),
-            'utm_campaign'   => $request->input('utm_campaign'),
-            'utm_term'       => $request->input('utm_term'),
-            'utm_content'    => $request->input('utm_content'),
-            'gclid'          => $request->input('gclid'),
-            'fbclid'         => $request->input('fbclid'),
-            'ttclid'         => $request->input('ttclid'),
-            'referral_code'  => $request->input('ref'),
-            'landing_path'   => '/'.ltrim($request->path(), '/'),
-            'ip'             => $request->ip(),
-            'user_agent'     => ($det['user_agent'] ?? $request->userAgent()),
-            'full_url'       => $request->fullUrl(),
-        ]);
-    }
-
     private function shouldStoreBasedOnBot(string $source): bool
     {
         $isBot = str_starts_with($source, 'bot:');
@@ -113,14 +62,53 @@ class ReferralService
 
     private function isInternalTraffic(?string $refHost, bool $hasExplicitSource): bool
     {
-        if ($hasExplicitSource) return false;
+        if ($hasExplicitSource) return false; // UTM/ref/source în URL bat refererul intern
         if (!$refHost) return false;
-
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
         $appHost = $appHost ? preg_replace('/^www\./', '', $appHost) : null;
         $refHost = preg_replace('/^www\./', '', $refHost);
-
         return $appHost && $refHost && ($appHost === $refHost);
+    }
+
+    public function trackReferral(Request $request): ?Referral
+    {
+        $det    = SourceDetector::detect($request);
+        $source = strtolower($det['source'] ?? 'direct');
+
+        $utmSource = $request->input('utm_source');
+        $refParam  = $request->input('ref');
+        $srcParam  = $request->input('source');
+
+        if (!$utmSource) {
+            $utmSource = $this->guessSourceFromHost($det['host_referrer'] ?? null);
+        }
+
+        foreach ([$utmSource, $refParam, $srcParam] as $cand) {
+            if ($cand) {
+                $source = $this->normalizeSource((string)$cand);
+                break;
+            }
+        }
+
+        $hasExplicitSource = (bool) ($utmSource || $refParam || $srcParam);
+        if (!$hasExplicitSource && $this->isInternalTraffic($det['host_referrer'] ?? null, $hasExplicitSource)) {
+            return null;
+        }
+
+        if (!$this->shouldStoreBasedOnBot($source)) {
+            return null;
+        }
+
+        // validare în lista permisă
+        if (!in_array($source, self::ALLOWED_SOURCES, true)) {
+            $source = 'other';
+        }
+
+        // Aici ar trebui să salvezi referral-ul în baza de date
+        // Exemplu:
+        // return Referral::create(['source' => $source, ...]);
+
+        return null; // Temporar - trebuie implementat salvare
     }
 
     public function getTrackingMessage(?Referral $referral): string
