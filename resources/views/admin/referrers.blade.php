@@ -124,6 +124,8 @@
             </div>
         </div>
     @endif
+    {{ $items->links() }}
+
 @endsection
 
 <style>
