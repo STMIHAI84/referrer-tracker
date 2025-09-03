@@ -11,18 +11,21 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class AdminReferralService
 {
     /** Construieste query-ul pe baza filtrelor (reutilizabil pentru listare + export) */
-    public function buildQuery(ReferralFilters $f): Builder
+    public function buildQuery(ReferralFilters $f,bool $withOrdering = true): Builder
     {
-        return Referral::query()
+        $query = Referral::query()
             ->when($f->source, fn($q,$v) => $q->fromSource($v))
             ->when($f->utm_source, fn($q,$v) => $q->withUtm($v))
             ->excludeBots($f->exclude_bots)
             ->between($f->from, $f->to)
             ->search($f->q);
 
-              if ($withOrdering) {
-                  $query->latest();
-              }
+        if ($withOrdering) {
+            $query->latest();
+        }
+
+        return $query;
+
     }
 
     /** Listare cu paginare */
@@ -43,7 +46,7 @@ class AdminReferralService
     /** Statistici aggregate (pe sursă) */
     public function totalsBySource(ReferralFilters $f)
     {
-        return $this->buildQuery($f)
+        return $this->buildQuery($f,false)
             ->selectRaw('source, COUNT(*) as c')
             ->groupBy('source')
             ->orderByDesc('c')
