@@ -124,7 +124,7 @@
             </div>
         </div>
     @endif
-    {{ $items->links() }}
+    {{ $items->links('pagination::bootstrap-5') }}
 
 @endsection
 
