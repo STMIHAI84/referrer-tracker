@@ -21,33 +21,34 @@ class ReferralService
 
     public function trackReferral(Request $request): ?Referral
     {
-
-        $det = SourceDetector::detect($request); // source, referer_raw, user_agent, host_referrer
+        $det    = SourceDetector::detect($request); // ['source','referer_raw','user_agent','host_referrer']
         $source = strtolower($det['source'] ?? 'direct');
 
-
-        if ($this->isInternalTraffic($det['host_referrer'])) {
-            return null;
-        }
-
-
-        if (!$this->shouldStoreBasedOnBot($source)) {
-            return null;
-        }
-
-
+        // 1) Citește întâi sursele explicite din URL (au prioritate)
         $utmSource = $request->input('utm_source');
         $refParam  = $request->input('ref');
         $srcParam  = $request->input('source');
+
         if ($utmSource)       $source = strtolower($utmSource);
         elseif ($refParam)    $source = strtolower($refParam);
         elseif ($srcParam)    $source = strtolower($srcParam);
 
+        $hasExplicitSource = (bool) ($utmSource || $refParam || $srcParam);
 
+        // 2) Doar dacă NU avem sursă explicită în URL, filtrăm traficul intern
+        if (!$hasExplicitSource && $this->isInternalTraffic($det['host_referrer'] ?? null, $hasExplicitSource)) {
+            return null;
+        }
+
+        // 3) Bot/non-bot
+        if (!$this->shouldStoreBasedOnBot($source)) {
+            return null;
+        }
+
+        // 4) Normalizează în lista permisă
         if (!in_array($source, self::ALLOWED_SOURCES, true)) {
             $source = 'other';
         }
-
 
         return Referral::create([
             'referrer_url'   => $det['referer_raw'] ?? null,
@@ -70,8 +71,9 @@ class ReferralService
         return $isBot ? self::STORE_BOTS : true;
     }
 
-    private function isInternalTraffic(?string $refHost): bool
+    private function isInternalTraffic(?string $refHost, bool $hasExplicitSource): bool
     {
+        if ($hasExplicitSource) return false; // UTM/ref/source în URL bat refererul intern
         if (!$refHost) return false;
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);
         $appHost = $appHost ? preg_replace('/^www\./', '', $appHost) : null;
