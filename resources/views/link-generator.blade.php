@@ -4,40 +4,68 @@
     <meta charset="utf-8">
     <title>Generator Link-uri</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; }
-        a { color: #2196F3; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        input { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 0.5rem; }
-        button { background: #4361ee; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body>
-<a href="{{ route('landing') }}">← Înapoi la Landing</a>
-<a href="{{ route('admin.referrers') }}" style="margin-left: 1rem;">📊 Admin</a>
-<a href="https://referrer-tracker.onrender.com/landing" target="_blank">Test referrer</a>
+<body class="page">
+<header class="container header">
+    <nav class="header-actions">
+        <a href="{{ route('landing') }}" class="btn">← Înapoi la Landing</a>
+        <a href="{{ route('admin.referrers') }}" class="btn btn-secondary">📊 Admin</a>
+    </nav>
+</header>
 
-<h1>Generator Link-uri de Tracking</h1>
+<main class="container">
+    <h1 class="page-title">Generator Link-uri de Tracking</h1>
 
-<div class="card">
-    <h3>Link-uri pregenerate:</h3>
-    @foreach($links as $platform => $url)
-        <div style="margin-bottom: 1.5rem;">
-            <h4>{{ $platform }}</h4>
-            <input type="text" value="{{ $url }}" readonly id="link-{{ $loop->index }}">
-            <button onclick="copyToClipboard('link-{{ $loop->index }}')">📋 Copiază</button>
-        </div>
-    @endforeach
-</div>
+    <section class="card">
+        <h3 class="card-title">Link-uri pregenerate</h3>
+
+        @forelse($links as $platform => $url)
+            <div class="link-row">
+                <div class="link-row__title">{{ $platform }}</div>
+                <div class="link-row__actions">
+                    <input type="text" class="input" value="{{ $url }}" readonly id="link-{{ $loop->index }}">
+                    <button class="btn" data-copy="#link-{{ $loop->index }}">📋 Copiază</button>
+                    <a class="btn btn-outline" href="{{ $url }}" target="_blank" rel="noopener">Deschide</a>
+                </div>
+            </div>
+        @empty
+            <div class="empty-state">
+                <div>📭</div>
+                <h3>Nu există link-uri pregenerate</h3>
+                <p class="text-muted">Adaugă link-uri în controller pentru a le testa rapid.</p>
+            </div>
+        @endforelse
+    </section>
+
+    <section class="card card-info">
+        <h3 class="card-title">Sfaturi de test</h3>
+        <ul class="list">
+            <li>Nu folosi <code>rel="noreferrer"</code> pe linkuri, altfel <em>Referer</em> nu ajunge la server.</li>
+            <li>Dacă testezi din CodePen/JSFiddle, deschide „View”/„Open in new window” ca să nu fie în iframe.</li>
+            <li>UTM-urile apar doar dacă linkul are parametri (ex: <code>?utm_source=facebook</code>).</li>
+        </ul>
+    </section>
+</main>
 
 <script>
-    function copyToClipboard(elementId) {
-        const element = document.getElementById(elementId);
-        element.select();
-        document.execCommand('copy');
-        alert('Link copiat în clipboard!');
-    }
+    document.addEventListener('click', async (e) => {
+        const btn = e.target.closest('[data-copy]');
+        if (!btn) return;
+        const selector = btn.getAttribute('data-copy');
+        const el = document.querySelector(selector);
+        if (!el) return;
+
+        try {
+            await navigator.clipboard.writeText(el.value);
+            btn.textContent = '✅ Copiat';
+            setTimeout(() => btn.textContent = '📋 Copiază', 1200);
+        } catch {
+            el.select();
+            document.execCommand('copy');
+            alert('Link copiat în clipboard!');
+        }
+    });
 </script>
 </body>
 </html>

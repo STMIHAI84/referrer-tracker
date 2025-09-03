@@ -21,21 +21,21 @@ class ReferralService
 
     public function trackReferral(Request $request): ?Referral
     {
-        // 1) Determină sursa
+
         $det = SourceDetector::detect($request); // source, referer_raw, user_agent, host_referrer
         $source = strtolower($det['source'] ?? 'direct');
 
-        // 2) Exclude trafic intern (același host ca APP_URL)
+
         if ($this->isInternalTraffic($det['host_referrer'])) {
             return null;
         }
 
-        // 3) Optional: nu salva boții
+
         if (!$this->shouldStoreBasedOnBot($source)) {
             return null;
         }
 
-        // 4) Optional: dacă permiți UTM/ref param ca OVERRIDE (doar dacă există)
+
         $utmSource = $request->input('utm_source');
         $refParam  = $request->input('ref');
         $srcParam  = $request->input('source');
@@ -43,12 +43,12 @@ class ReferralService
         elseif ($refParam)    $source = strtolower($refParam);
         elseif ($srcParam)    $source = strtolower($srcParam);
 
-        // 5) Surse permise
+
         if (!in_array($source, self::ALLOWED_SOURCES, true)) {
             $source = 'other';
         }
 
-        // 6) Creează înregistrarea
+
         return Referral::create([
             'referrer_url'   => $det['referer_raw'] ?? null,
             'referrer_host'  => $det['host_referrer'] ?? null,

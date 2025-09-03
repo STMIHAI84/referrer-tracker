@@ -18,7 +18,7 @@ class Referral extends Model
         'updated_at' => 'datetime',
     ];
 
-    // === Scopes ===
+
     public function scopeExternal(Builder $q): Builder
     {
         $appHost = parse_url(config('app.url'), PHP_URL_HOST);

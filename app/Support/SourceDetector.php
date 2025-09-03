@@ -54,14 +54,13 @@ final class SourceDetector
             return self::HOST_MAP[$host];
         }
 
-        // fallback: caută containere (ex: sub.sub.facebook.com)
         foreach (array_keys(self::HOST_MAP) as $needle) {
             if (str_contains($host, $needle)) {
                 return self::HOST_MAP[$needle];
             }
         }
 
-        return $host; // lăsăm domeniul ca „etichetă” dacă nu-l cunoaștem
+        return $host;
     }
 
     /** Returnează true dacă UA pare să fie bot */
@@ -79,7 +78,6 @@ final class SourceDetector
         $host    = $referer ? parse_url($referer, PHP_URL_HOST) : null;
         $host    = self::normalizeHost($host);
 
-        // 1) Dacă e bot, etichetează-l explicit
         if (self::isBot($ua)) {
             $label = 'bot:other';
             if (stripos($ua, 'facebook') !== false) $label = 'bot:facebook';
@@ -99,7 +97,6 @@ final class SourceDetector
             ];
         }
 
-        // 2) Sursa din host (dacă există)
         if ($host) {
             $mapped = self::mapHostToSource($host);
             return [
@@ -110,7 +107,6 @@ final class SourceDetector
             ];
         }
 
-        // 3) Fallback pe UA pentru aplicații care ascund referer
         if (stripos($ua, 'FBAN') !== false || stripos($ua, 'FBAV') !== false || stripos($ua, 'FB_IAB') !== false) {
             $fallback = 'facebook-app';
         } elseif (stripos($ua, 'Instagram') !== false) {

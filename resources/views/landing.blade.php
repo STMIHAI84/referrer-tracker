@@ -4,66 +4,85 @@
     <meta charset="utf-8">
     <title>Landing Page</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <style>
-        body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-        .card { background: #f9f9f9; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; border-left: 4px solid #4CAF50; }
-        .info-card { border-left-color: #2196F3; }
-        .text-muted { color: #666; font-size: 0.9em; }
-        a { color: #2196F3; text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .badge { background: #4361ee; color: white; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8em; }
-        pre { background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow: auto; }
-    </style>
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
 </head>
-<body>
-<a href="{{ route('admin.referrers') }}">📊 Admin Referrers</a>
-<a href="{{ route('generate.links') }}" style="margin-left: 1rem;">🔗 Generate Links</a>
+<body class="page">
+<header class="container header">
+    <nav class="header-actions">
+        <a href="{{ route('admin.referrers') }}" class="btn">📊 Admin</a>
+        <a href="{{ route('generate.links') }}" class="btn btn-secondary">🔗 Generate Links</a>
+    </nav>
+</header>
 
-<h1>Pagina Landing /landing</h1>
+<main class="container">
+    <h1 class="page-title">Pagina Landing</h1>
 
-<div class="card {{ $entry ? '' : 'info-card' }}">
-    <h3>Status Tracking</h3>
-    <p>{{ $message }}</p>
-</div>
+    <section class="card {{ $entry ? 'card-success' : 'card-info' }}">
+        <h3 class="card-title">Status Tracking</h3>
+        <p>{{ $message }}</p>
+    </section>
 
-@if($entry)
-    <div class="card">
-        <h3>Detalii înregistrare:</h3>
-        <p><strong>ID:</strong> <span class="badge">#{{ $entry->id }}</span></p>
-        <p><strong>Sursa:</strong> {{ $entry->source }}</p>
+    @if($entry)
+        <section class="card">
+            <h3 class="card-title">Detalii înregistrare</h3>
+            <div class="details-grid">
+                <div><strong>ID</strong> <span class="badge">#{{ $entry->id }}</span></div>
+                <div><strong>Sursa</strong> <span class="badge badge-source">{{ $entry->source }}</span></div>
 
-        @if($entry->utm_source)
-            <p><strong>UTM Source:</strong> {{ $entry->utm_source }}</p>
-            <p><strong>UTM Medium:</strong> {{ $entry->utm_medium }}</p>
-            <p><strong>UTM Campaign:</strong> {{ $entry->utm_campaign }}</p>
-        @endif
+                @if($entry->utm_source)
+                    <div><strong>UTM Source</strong> {{ $entry->utm_source }}</div>
+                    <div><strong>UTM Medium</strong> {{ $entry->utm_medium }}</div>
+                    <div><strong>UTM Campaign</strong> {{ $entry->utm_campaign }}</div>
+                @endif
 
-        @if($entry->referral_code)
-            <p><strong>Referral Code:</strong> {{ $entry->referral_code }}</p>
-        @endif
+                @if($entry->referral_code)
+                    <div><strong>Referral Code</strong> {{ $entry->referral_code }}</div>
+                @endif
 
-        <p><strong>Landing Page:</strong> {{ $entry->landing_path }}</p>
-        <p><strong>IP:</strong> {{ $entry->ip }}</p>
-        <p><strong>User-Agent:</strong> {{ Str::limit($entry->user_agent, 120) }}</p>
-        <p class="text-muted">Creat la: {{ $entry->created_at->format('d.m.Y H:i:s') }}</p>
-    </div>
-@endif
+                <div><strong>Landing Page</strong> {{ $entry->landing_path }}</div>
+                <div><strong>IP</strong> {{ $entry->ip }}</div>
+                <div class="span-2">
+                    <strong>User-Agent</strong>
+                    <div class="mono">{{ \Illuminate\Support\Str::limit($entry->user_agent, 200) }}</div>
+                </div>
+                <div class="text-muted span-2">Creat la: {{ $entry->created_at->format('d.m.Y H:i:s') }}</div>
+            </div>
+        </section>
+    @endif
 
-<div class="card">
-    <h3>Parametri primiți:</h3>
-    <pre>{{ json_encode($queryParams, JSON_PRETTY_PRINT) }}</pre>
-</div>
+    <section class="card">
+        <h3 class="card-title">Parametri primiți</h3>
+        <pre class="pre">{{ json_encode($queryParams, JSON_PRETTY_PRINT) }}</pre>
+    </section>
 
-<div class="card">
-    <h3>Testează cu:</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-        <a href="/landing?utm_source=facebook" style="background: #1877F2; color: white; padding: 0.5rem 1rem; border-radius: 6px;">Facebook</a>
-        <a href="/landing?utm_source=instagram" style="background: #E4405F; color: white; padding: 0.5rem 1rem; border-radius: 6px;">Instagram</a>
-        <a href="/landing?utm_source=whatsapp" style="background: #25D366; color: white; padding: 0.5rem 1rem; border-radius: 6px;">WhatsApp</a>
-        <a href="/landing?ref=twitter" style="background: #1DA1F2; color: white; padding: 0.5rem 1rem; border-radius: 6px;">Twitter</a>
-        <a href="/landing?source=organic" style="background: #6c757d; color: white; padding: 0.5rem 1rem; border-radius: 6px;">Organic</a>
-        <a href="/landing" style="background: #495057; color: white; padding: 0.5rem 1rem; border-radius: 6px;">Direct</a>
-    </div>
-</div>
+    <section class="card">
+        <h3 class="card-title">Teste rapide</h3>
+        <div class="btn-row">
+            <a href="/landing?utm_source=facebook" class="btn btn-fb">Facebook</a>
+            <a href="/landing?utm_source=instagram" class="btn btn-ig">Instagram</a>
+            <a href="/landing?utm_source=whatsapp" class="btn btn-wa">WhatsApp</a>
+            <a href="/landing?ref=twitter" class="btn btn-tw">Twitter</a>
+            <a href="/landing?source=organic" class="btn btn-dark">Organic</a>
+            <a href="/landing" class="btn btn-outline">Direct</a>
+        </div>
+    </section>
+
+    <section class="card card-muted">
+        <h3 class="card-title">Debug client (doar orientativ)</h3>
+        <div class="details-grid">
+            <div class="span-2"><strong>document.referrer</strong> <span class="mono" id="js-referrer">—</span></div>
+            <div class="span-2"><strong>navigator.userAgent</strong> <span class="mono" id="js-ua">—</span></div>
+            <div><strong>Referrer Policy</strong> <span class="mono" id="js-rp">—</span></div>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.getElementById('js-referrer').textContent = document.referrer || '— (gol / blocat)';
+    document.getElementById('js-ua').textContent = navigator.userAgent || '—';
+    try {
+        document.getElementById('js-rp').textContent = getComputedStyle(document.querySelector('a'))?.referrerPolicy || 'implicit browser';
+    } catch { document.getElementById('js-rp').textContent = 'n/a'; }
+</script>
 </body>
 </html>

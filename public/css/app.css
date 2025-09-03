@@ -1,269 +1,141 @@
-/* Variabile și reset */
+/* =========================
+   Variabile & reset
+========================= */
 :root {
-    --primary-color: #4361ee;
-    --secondary-color: #3f37c9;
-    --success-color: #4cc9f0;
-    --danger-color: #f72585;
-    --warning-color: #f77f00;
-    --text-color: #333;
-    --light-bg: #f8f9fa;
-    --border-color: #dee2e6;
+    --primary: #4361ee;
+    --primary-600: #3f37c9;
+    --accent: #4cc9f0;
+    --danger: #f72585;
+    --warning: #f77f00;
+    --text: #333;
+    --muted: #6c757d;
+    --bg: #fff;
+    --bg-soft: #f8f9fa;
+    --border: #dee2e6;
     --header-bg: #e9ecef;
-    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.08);
-    --transition: all 0.3s ease;
+    --shadow: 0 4px 6px rgba(0,0,0,.08);
+    --radius: 8px;
+    --pad: 1.5rem;
+    --trans: all .2s ease;
 }
 
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-    color: var(--text-color);
-    background-color: #fff;
-    line-height: 1.6;
-}
+/* =========================
+   Layout
+========================= */
+.page { padding: 20px 0; }
+.container { width: 100%; max-width: 1200px; padding: 0 16px; margin: 0 auto; }
 
-/* Layout și container */
-.container {
-    width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
+.header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-bottom: 14px; border-bottom: 1px solid var(--border); margin-bottom: 22px; }
+.brand, .page-title { color: var(--primary); font-weight: 600; }
+.page-title { font-size: 1.8rem; margin: 0 0 12px; }
 
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 30px;
-    padding-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-}
+.header-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
-h1 {
-    color: var(--primary-color);
-    margin: 0;
-    font-weight: 600;
-    font-size: 2rem;
-}
+/* =========================
+   Carduri
+========================= */
+.card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow); padding: var(--pad); margin-bottom: 18px; }
+.card-title { margin-bottom: 10px; color: #2b2d42; font-weight: 600; }
+.card-success { border-left: 4px solid #4caf50; }
+.card-info { border-left: 4px solid #2196f3; }
+.card-muted { border-left: 4px solid #adb5bd; }
 
-h2 {
-    color: var(--secondary-color);
-    margin: 1.5rem 0 1rem;
-    font-weight: 500;
-}
+/* =========================
+   Butoane
+========================= */
+.btn { appearance: none; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; border-radius: 6px; background: var(--primary); color: #fff; text-decoration: none; transition: var(--trans); font-weight: 500; }
+.btn:hover { background: var(--primary-600); transform: translateY(-1px); }
+.btn-secondary { background: #6c757d; }
+.btn-secondary:hover { background: #5a6268; }
+.btn-outline { background: transparent; color: var(--primary); border: 1px solid var(--primary); }
+.btn-outline:hover { background: rgba(67,97,238,.08); }
+.btn-dark { background: #495057; }
+.btn-dark:hover { background: #343a40; }
 
-/* Butoane și link-uri */
-.btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 10px 16px;
-    background-color: var(--primary-color);
-    color: white;
-    text-decoration: none;
-    border-radius: 6px;
-    font-weight: 500;
-    transition: var(--transition);
-    border: none;
-    cursor: pointer;
-    font-size: 1rem;
-}
+/* platform buttons */
+.btn-fb { background: #1877F2; }
+.btn-fb:hover { background: #0f5ed1; }
+.btn-ig { background: #E4405F; }
+.btn-ig:hover { background: #c73551; }
+.btn-wa { background: #25D366; color: #0c3822; }
+.btn-wa:hover { filter: brightness(.95); }
+.btn-tw { background: #1DA1F2; }
+.btn-tw:hover { background: #1186cf; }
 
-.btn:hover {
-    background-color: var(--secondary-color);
-    transform: translateY(-2px);
-}
+.btn-row { display: flex; flex-wrap: wrap; gap: 10px; }
 
-.btn-secondary {
-    background-color: #6c757d;
-}
+/* =========================
+   Form & inputs
+========================= */
+.input { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; background: #fff; }
+.input:read-only { background: #fafafa; }
 
-.btn-secondary:hover {
-    background-color: #5a6268;
-}
+/* =========================
+   List, badges, misc
+========================= */
+.list { padding-left: 18px; }
+.list li { margin: 6px 0; }
 
-/* Carduri */
-.card {
-    background: white;
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-    margin-bottom: 1.5rem;
-}
+.badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; color: #fff; background: var(--primary); }
+.badge-source { background: #4361ee; }
 
-.card-success {
-    border-left: 4px solid #4CAF50;
-}
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; word-break: break-all; }
 
-.card-info {
-    border-left: 4px solid #2196F3;
-}
+.text-muted { color: var(--muted); font-size: .95rem; }
 
-/* Statistici */
-.stats {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-}
+/* =========================
+   Grile
+========================= */
+.details-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px 16px; }
+.details-grid .span-2 { grid-column: span 2; }
 
-.stat-card {
-    flex: 1;
-    min-width: 200px;
-    background: white;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: var(--card-shadow);
-    text-align: center;
-    border-top: 4px solid var(--primary-color);
-}
+/* =========================
+   Rânduri link generator
+========================= */
+.link-row { display: grid; grid-template-columns: 180px 1fr; gap: 10px 16px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.link-row:last-child { border-bottom: 0; }
+.link-row__title { font-weight: 600; color: #222; }
+.link-row__actions { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; }
 
-.stat-number {
-    font-size: 28px;
-    font-weight: 700;
-    color: var(--primary-color);
-    margin-bottom: 5px;
-}
+/* =========================
+   Tabel (dacă îl folosești în admin)
+========================= */
+.table-container { overflow-x: auto; margin: 16px 0; }
+table { width: 100%; border-collapse: collapse; background: #fff; box-shadow: var(--shadow); border-radius: var(--radius); overflow: hidden; }
+th { background: var(--header-bg); padding: 14px 12px; text-align: left; font-weight: 600; color: #495057; border-bottom: 2px solid var(--border); white-space: nowrap; }
+td { padding: 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+tr:hover { background: rgba(67,97,238,.05); }
+.url-cell { max-width: 280px; word-break: break-all; }
+.user-agent-cell { max-width: 420px; word-break: break-all; font-size: 13px; color: #666; }
+.timestamp { white-space: nowrap; }
 
-.stat-label {
-    color: #666;
-    font-size: 14px;
-}
+/* =========================
+   Empty state
+========================= */
+.empty-state { text-align: center; padding: 36px 10px; color: var(--muted); }
+.empty-state h3 { margin-top: 8px; margin-bottom: 4px; }
 
-/* Tabel */
-.table-container {
-    overflow-x: auto;
-    margin: 1.5rem 0;
-}
+/* =========================
+   Pre/code
+========================= */
+.pre { background: #f5f5f5; padding: 12px; border-radius: 6px; overflow: auto; }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-    box-shadow: var(--card-shadow);
-    background: white;
-    border-radius: 8px;
-    overflow: hidden;
-}
-
-th {
-    background-color: var(--header-bg);
-    padding: 16px 12px;
-    text-align: left;
-    font-weight: 600;
-    color: #495057;
-    border-bottom: 2px solid var(--border-color);
-}
-
-td {
-    padding: 14px 12px;
-    border-bottom: 1px solid var(--border-color);
-    vertical-align: top;
-}
-
-tr:hover {
-    background-color: rgba(67, 97, 238, 0.05);
-}
-
-.url-cell {
-    max-width: 280px;
-    word-break: break-all;
-}
-
-.user-agent-cell {
-    max-width: 300px;
-    word-break: break-all;
-    font-size: 13px;
-    color: #666;
-}
-
-/* Stări empty */
-.empty-state {
-    text-align: center;
-    padding: 40px;
-    color: #6c757d;
-}
-
-.empty-state i {
-    font-size: 48px;
-    margin-bottom: 15px;
-    opacity: 0.5;
-}
-
-/* Utilitare */
-.timestamp {
-    white-space: nowrap;
-}
-
-.badge {
-    display: inline-block;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: 500;
-}
-
-.badge-primary {
-    background-color: rgba(67, 97, 238, 0.1);
-    color: var(--primary-color);
-}
-
-.text-muted {
-    color: #6c757d;
-    font-size: 0.9rem;
-}
-
-.mt-3 {
-    margin-top: 1.5rem;
-}
-
-.mb-3 {
-    margin-bottom: 1.5rem;
-}
-
-/* Responsive */
+/* =========================
+   Responsive
+========================= */
 @media (max-width: 992px) {
-    .stats {
-        flex-direction: column;
-    }
-
-    .url-cell, .user-agent-cell {
-        max-width: 200px;
-    }
-}
-
-@media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 15px;
-    }
-
-    th, td {
-        padding: 10px 8px;
-        font-size: 0.9rem;
-    }
-
-    h1 {
-        font-size: 1.75rem;
-    }
+    .details-grid { grid-template-columns: 1fr; }
+    .details-grid .span-2 { grid-column: span 1; }
+    .link-row { grid-template-columns: 1fr; }
+    .link-row__actions { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 576px) {
-    body {
-        padding: 15px;
-    }
-
-    .card {
-        padding: 1rem;
-    }
-
-    .stat-card {
-        min-width: 100%;
-    }
+    .container { padding: 0 12px; }
+    .card { padding: 1rem; }
+    .page-title { font-size: 1.5rem; }
 }
