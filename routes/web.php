@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Admin\ReferralController;
 use App\Http\Controllers\LandingController;
-use App\Http\Controllers\Admin\ReferralController as AdminReferralController;
 
 Route::get('/', function () {
     return redirect('landing');
