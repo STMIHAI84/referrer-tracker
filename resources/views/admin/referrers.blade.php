@@ -92,8 +92,9 @@
                         <td>{{ $r->referrer_host ?? '—' }}</td>
                         <td>{{ $r->landing_path }}</td>
                         <td>{{ $r->ip }}</td>
-                        <td class="user-agent-cell">{{ Str::limit($r->user_agent, 50) }}</td>
-                    </tr>
+                        <td title="{{ $r->user_agent }}">
+                            {{ Str::limit($r->user_agent, 50) }}
+                        </td>                    </tr>
                 @endforeach
                 </tbody>
             </table>
