@@ -2,11 +2,19 @@
 
 use App\Http\Controllers\Admin\ReferralController;
 use App\Http\Controllers\LandingController;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ClickRedirectController;
 
 Route::get('/', function () {
     return redirect('landing');
 });
 
+
+
+// Redirector first-party (cu log + cookie)
+Route::get('/r', [ClickRedirectController::class, 'handle'])
+    ->name('track.redirect')
+    ->middleware('throttle:120,1'); // opțional rate limit
 Route::get('/landing', [LandingController::class, 'show'])->name('landing');
 
 Route::prefix('admin')->group(function () {
