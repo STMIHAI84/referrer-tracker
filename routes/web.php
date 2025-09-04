@@ -10,7 +10,14 @@ Route::get('/', function () {
 });
 
 
-
+Route::get('/debug-generate', function () {
+    $url = TrackingLink::make(
+        route('landing'),
+        ['sd_source' => 'telegram', 'utm_campaign' => 'sd_test'],
+        true
+    );
+    return "<a href='{$url}'>Link semnat</a><div style='word-break:break-all'>{$url}</div>";
+});
 // Redirector first-party (cu log + cookie)
 Route::get('/r', [ClickRedirectController::class, 'handle'])
     ->name('track.redirect')
