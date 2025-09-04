@@ -9,8 +9,10 @@ class ClickRedirectController extends Controller
 {
     public function handle(Request $req)
     {
-        $to       = $req->query('to', route('landing'));
-        $clid     = $req->query('_sdclid');
+        $to = $req->query('to', route('landing'));
+        $hostOk = parse_url($to, PHP_URL_HOST) === parse_url(config('app.url'), PHP_URL_HOST);
+        if (!$hostOk) abort(400, 'Invalid target');
+        $clid = $req->query('_sdclid') ?: (string) \Illuminate\Support\Str::uuid();
         $sdSource = strtolower($req->query('sd_source', 'direct'));
 
         // Validare semnătură
@@ -40,9 +42,10 @@ class ClickRedirectController extends Controller
         }
 
         // Setează cookie first-party (persistă sursa și fără referer)
+        $isSecure = app()->environment('production');
         $resp = redirect()->away($to);
-        $resp->withCookie(cookie()->make('_sdclid', $clid, 60*24*30, '/', null, false, false));
-        $resp->withCookie(cookie()->make('sd_source', $sdSource, 60*24*30, '/', null, false, false));
+        $resp->withCookie(cookie()->make('_sdclid', $clid, 60*24*30, '/', null, $isSecure, true));
+        $resp->withCookie(cookie()->make('sd_source', strtolower($sdSource), 60*24*30, '/', null, $isSecure, true));
         return $resp;
     }
 }
